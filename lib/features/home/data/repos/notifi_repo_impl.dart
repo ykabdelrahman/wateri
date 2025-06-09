@@ -8,7 +8,7 @@ class NotificationRepoImpl implements NotificationRepo {
 
   @override
   Future<void> scheduleNotifications() async {
-    await notifiService.showSimpleNotification();
+    await notifiService.showNotification();
   }
 
   @override

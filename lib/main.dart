@@ -10,11 +10,9 @@ import 'features/home/presentation/views/home_view.dart';
 
 const backgroundTask = "waterReminderTask";
 
-@pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    final notificationService = NotificationService();
-    await notificationService.initialize();
+    await getIt<NotificationService>().showNotification();
     return Future.value(true);
   });
 }
@@ -22,6 +20,7 @@ void callbackDispatcher() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setupGetIt();
+  await getIt<NotificationService>().initialize();
 
   await Workmanager().initialize(callbackDispatcher);
 
