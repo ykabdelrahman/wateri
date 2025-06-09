@@ -61,6 +61,7 @@ class NotificationService {
     return result ?? false;
   }
 
+  @pragma('vm:entry-point')
   Future<void> showNotification() async {
     const androidDetails = AndroidNotificationDetails(
       AppConstants.androidChannelId,

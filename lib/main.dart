@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:workmanager/workmanager.dart';
@@ -9,10 +10,13 @@ import 'features/home/presentation/view_model/notification_cubit.dart';
 import 'features/home/presentation/views/home_view.dart';
 
 const backgroundTask = "waterReminderTask";
+final NotificationService notificationService = NotificationService();
 
+@pragma('vm:entry-point')
 void callbackDispatcher() {
   Workmanager().executeTask((task, inputData) async {
-    await getIt<NotificationService>().showNotification();
+    await notificationService.showNotification();
+    log("Background task executed: $task with input: $inputData");
     return Future.value(true);
   });
 }
@@ -20,7 +24,7 @@ void callbackDispatcher() {
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   setupGetIt();
-  await getIt<NotificationService>().initialize();
+  await notificationService.initialize();
 
   await Workmanager().initialize(callbackDispatcher);
 
