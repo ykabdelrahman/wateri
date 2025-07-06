@@ -1,45 +1,35 @@
-import 'package:flutter/foundation.dart';
+import 'dart:developer';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:flutter_timezone/flutter_timezone.dart';
-import 'package:timezone/timezone.dart' as tz;
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:wateri/core/utils/constants.dart';
+import 'package:flutter/foundation.dart';
 
 class NotificationService {
-  final FlutterLocalNotificationsPlugin _notifications =
+  static final FlutterLocalNotificationsPlugin _notifications =
       FlutterLocalNotificationsPlugin();
 
-  Future<void> initialize() async {
-    await _configureTimeZone();
-    await _initializeNotificationPlugin();
-  }
+  static Future<void> initialize() async {
+    const AndroidInitializationSettings androidSettings =
+        AndroidInitializationSettings('app_icon');
 
-  Future<void> _configureTimeZone() async {
-    tz.initializeTimeZones();
-    final String timeZoneName = await FlutterTimezone.getLocalTimezone();
-    tz.setLocalLocation(tz.getLocation(timeZoneName));
-  }
+    const DarwinInitializationSettings iosSettings =
+        DarwinInitializationSettings(
+          requestAlertPermission: true,
+          requestBadgePermission: true,
+          requestSoundPermission: true,
+        );
 
-  Future<void> _initializeNotificationPlugin() async {
-    const androidSettings = AndroidInitializationSettings('app_icon');
-
-    const iosSettings = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
-    );
-
-    const settings = InitializationSettings(
+    const InitializationSettings settings = InitializationSettings(
       android: androidSettings,
       iOS: iosSettings,
     );
 
     await _notifications.initialize(settings);
 
+    // Request permissions after initialization
     await requestPermissions();
+    log('NotificationService initialized and permissions requested');
   }
 
-  Future<bool> requestPermissions() async {
+  static Future<bool> requestPermissions() async {
     bool? result;
 
     if (defaultTargetPlatform == TargetPlatform.iOS) {
@@ -61,32 +51,52 @@ class NotificationService {
     return result ?? false;
   }
 
-  @pragma('vm:entry-point')
-  Future<void> showNotification() async {
-    const androidDetails = AndroidNotificationDetails(
-      AppConstants.androidChannelId,
-      AppConstants.androidChannelName,
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+  static Future<bool> areNotificationsEnabled() async {
+    if (defaultTargetPlatform == TargetPlatform.iOS) {
+      final bool? result = await _notifications
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.checkPermissions()
+          .then((permissions) => permissions!.isEnabled);
+      return result ?? false;
+    } else if (defaultTargetPlatform == TargetPlatform.android) {
+      final AndroidFlutterLocalNotificationsPlugin? androidImplementation =
+          _notifications
+              .resolvePlatformSpecificImplementation<
+                AndroidFlutterLocalNotificationsPlugin
+              >();
 
-    const iosDetails = DarwinNotificationDetails();
+      final bool? result = await androidImplementation
+          ?.areNotificationsEnabled();
+      return result ?? false;
+    }
 
-    const platformDetails = NotificationDetails(
+    return false;
+  }
+
+  static Future<void> showWaterReminder() async {
+    const AndroidNotificationDetails androidDetails =
+        AndroidNotificationDetails(
+          'water_channel',
+          'Water Reminder',
+          channelDescription: 'Notifies you to drink water',
+          importance: Importance.high,
+          priority: Priority.high,
+        );
+
+    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
+
+    const NotificationDetails notificationDetails = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
 
     await _notifications.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      AppConstants.notificationTitle,
-      AppConstants.notificationBody,
-      platformDetails,
-      payload: AppConstants.notificationPayload,
+      0,
+      '💧 Time to Hydrate!',
+      'Don\'t forget to drink water!',
+      notificationDetails,
     );
-  }
-
-  Future<void> cancelAllNotifications() async {
-    await _notifications.cancelAll();
   }
 }
