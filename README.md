@@ -12,8 +12,8 @@ To run this project on your local machine:
 
 ```bash
 # Clone the repo
-git clone https://github.com/ykabdelrahman/watri.git
-cd your-repo-name
+git clone https://github.com/ykabdelrahman/wateri.git
+cd wateri
 
 # Get dependencies
 flutter pub get
