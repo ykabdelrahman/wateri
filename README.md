@@ -1,4 +1,4 @@
-## Watri
+## Wateri
 A Flutter app that reminds users to drink water with customizable intervals and persistent tracking.
 
 
